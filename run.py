@@ -41,10 +41,10 @@ def run(cfg: BaseOptions):
         logging.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
     # Create data module
-    # Note: we need to manually process the data module in order to get a valid skeleton
+    # Note: we need to manually process the data module in order to get a valid skeleton（我们需要手动处理数据模块，以获得有效的骨架）
     # We don't call setup() as this breaks ddp_spawn training for some reason
     # Calling setup() is not required here as we only need access to the skeleton data, achieved with get_skeleton()
-    dm = instantiate(cfg.dataset)
+    dm = instantiate(cfg.dataset)#返回base中dataset._target_指明的LafanSequenceDataset实例化对象
     dm.prepare_data()
 
     # create model
@@ -105,15 +105,15 @@ def run(cfg: BaseOptions):
 
 def main(filepath: str, overrides: list = []):
     with open(filepath) as f:
-        experiment_cfg = yaml.load(f, Loader=yaml.SafeLoader)
+        experiment_cfg = yaml.load(f, Loader=yaml.SafeLoader)#加载transformer.yaml
 
     config_path = "src/configs"
     initialize(config_path=config_path)
 
-    base_config = experiment_cfg["base_config"]
-    experiment_params = experiment_cfg["parameters"]
+    base_config = experiment_cfg["base_config"]#取出transformer.yaml中的base
+    experiment_params = experiment_cfg["parameters"]#取出transformer.yaml中的params
     for k in experiment_params:
-        if not isinstance(experiment_params[k], list):
+        if not isinstance(experiment_params[k], list):#确保所有params是list
             experiment_params[k] = [experiment_params[k]]
 
     param_grid = ParameterGrid(experiment_params)
@@ -126,7 +126,7 @@ def main(filepath: str, overrides: list = []):
         # add global overrides last
         param_overrides += overrides
 
-        cfg = compose(base_config + ".yaml", overrides=param_overrides)
+        cfg = compose(base_config + ".yaml", overrides=param_overrides)#配合initialize（）作全局初始化，base作为基础配置，base写在transformer.yaml里，transformer.yaml中其他配置被param_grid组织成附加的一组组配置override进cfg
 
         set_latest_checkpoint(cfg)
 
